@@ -36,7 +36,7 @@ module.exports = {
 
     // Handle text queries using a GPT-like API
     try {
-      const response = await axios.get(`https://ccprojectapis.ddns.net/api/gpt4turbo?q=${encodeURIComponent(query)}&id=1`);
+      const response = await axios.get(`https://ccprojectapis.ddns.net/api/gpt4turbo?prompt=${encodeURIComponent(input)}&id=1`);
       const data = response.data;
 
       const formattedMessage = `${header}\n${data.response || 'This is an example response.'}\n${footer}`;
