@@ -1,77 +1,49 @@
-const Groq = require('groq-sdk');
+const axios = require('axios');
+const { sendMessage } = require('../handles/sendMessage');
+const fs = require('fs');
 
-const groq = new Groq({ apiKey: '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' });
+const token = fs.readFileSync('token.txt', 'utf8');
 
-const messageHistory = new Map();
-const maxMessageLength = 2000;
-
-// Function to split a message into chunks of specified length
-function splitMessageIntoChunks(text, maxLength) {
-  const messages = [];
-  for (let i = 0; i < text.length; i += maxLength) {
-    messages.push(text.slice(i, i + maxLength));
-  }
-  return messages;
-}
 module.exports = {
   name: 'ai',
-  description: 'response within seconds',
-  author: 'Nics',
+  description: 'Example command',
+  author: 'Coffee',
 
-  async execute(senderId, messageText, pageAccessToken, sendMessage) {
-    try {
-      console.log("User Message:", messageText);
+  async execute(senderId, args, message) {
+    const pageAccessToken = token;
+    const input = (args.join(' ') || 'hi').trim();
+    const modifiedPrompt = `${input}, direct answer.`;
 
-      // Send an empty message to indicate processing
-      sendMessage(senderId, { text: '' }, pageAccessToken);
+    const header = "(⁠◍⁠•⁠ᴗ⁠•⁠◍⁠) | 𝙼𝚘𝚌𝚑𝚊 𝙰𝚒\n・──────────────・";
+    const footer = "・───── >ᴗ< ──────・";
 
-      let userHistory = messageHistory.get(senderId) || [];
-      if (userHistory.length === 0) {
-        userHistory.push({ role: 'system', content: 'Your name is Cleo Ai, created by Sunnel Rebano.' });
-      }
-      userHistory.push({ role: 'user', content: messageText });
-
-      const chatCompletion = await groq.chat.completions.create({
-        messages: userHistory,
-        model: 'llama3-8b-8192',
-        temperature: 1,
-        max_tokens: 1025, // You can increase this limit if necessary
-        top_p: 1,
-        stream: true,
-        stop: null
-      });
-
-      let responseMessage = '';
+    // Check if message contains an image (optional)
+    if (message && message.attachments && message.attachments[0]?.type === 'photo') {
+      const imageUrl = message.attachments[0].url;
       
-      for await (const chunk of chatCompletion) {
-        const chunkContent = chunk.choices[0]?.delta?.content || '';
-        responseMessage += chunkContent; // Compile the complete response
-        
-        // Check if the current response message exceeds the max length
-        if (responseMessage.length >= maxMessageLength) {
-          const messages = splitMessageIntoChunks(responseMessage, maxMessageLength);
-          for (const message of messages) {
-            sendMessage(senderId, { text: message }, pageAccessToken); // Send each chunk
-          }
-          responseMessage = ''; // Reset responseMessage after sending
-        }
+      const geminiUrl = `https://example-api.com/chat.php?ask=${encodeURIComponent(modifiedPrompt)}&imgurl=${encodeURIComponent(imageUrl)}`;
+      try {
+        const response = await axios.get(geminiUrl);
+        const { vision } = response.data;
+
+        const formattedMessage = `${header}\n${vision || 'Failed to recognize the image.'}\n${footer}`;
+        return await sendMessage(senderId, { text: formattedMessage }, pageAccessToken);
+      } catch (error) {
+        console.error('Error fetching image recognition:', error);
+        return await sendMessage(senderId, { text: `${header}\nAn error occurred while processing the image.\n${footer}` }, pageAccessToken);
       }
+    }
 
-      // Log the raw response from the API
-      console.log("Raw API Response:", responseMessage);
+    // Handle text queries using a GPT-like API
+    try {
+      const response = await axios.get(`https://example-api.com/api?query=${encodeURIComponent(modifiedPrompt)}`);
+      const data = response.data;
 
-      // Send any remaining part of the response
-      if (responseMessage) {
-        userHistory.push({ role: 'assistant', content: responseMessage });
-        messageHistory.set(senderId, userHistory);
-        sendMessage(senderId, { text: responseMessage }, pageAccessToken);
-      } else {
-        throw new Error("Received empty response from Groq.");
-      }
-
+      const formattedMessage = `${header}\n${data.response || 'This is an example response.'}\n${footer}`;
+      await sendMessage(senderId, { text: formattedMessage }, pageAccessToken);
     } catch (error) {
-      console.error('Error communicating with Groq:', error.message);
-      sendMessage(senderId, { text: "I'm busy right now, please try again later." }, pageAccessToken);
+      console.error('Error fetching from API:', error);
+      await sendMessage(senderId, { text: `${header}\nAn error occurred while trying to reach the API.\n${footer}` }, pageAccessToken);
     }
   }
 };
