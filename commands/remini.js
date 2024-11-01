@@ -9,7 +9,7 @@ module.exports = {
   usage: 'reply to an image and chat\n-remini',
   author: 'coffee',
 
-  async execute(senderId, args, pageAccessToken, event, getImageUrl) {
+  async execute(senderId, args, pageAccessToken, event,) {
     const imageUrl = await getImageUrl(event, pageAccessToken);
     if (!imageUrl) return sendError(senderId, 'Error: No image found to upscale.', pageAccessToken);
 
