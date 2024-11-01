@@ -16,7 +16,7 @@ module.exports = {
     const modifiedPrompt = `${input}, direct answer.`;
 
     try {
-      sendMessage(senderId, { text: '...✍🏻' }, pageAccessToken);
+      sendMessage(senderId, { text: 'Generating content... Please wait.' }, pageAccessToken);
       const response = await axios.get(`https://www.geo-sevent-tooldph.site/api/blackbox?prompt=${encodeURIComponent(modifiedPrompt)}`);
       const data = response.data;
       const formattedMessage = `・──🤖blackbox🤖──・\n${data.response}\n・──── >ᴗ< ────・`;
