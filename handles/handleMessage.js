@@ -50,7 +50,7 @@ async function handleMessage(event, pageAccessToken) {
 
         const userMessage = args.join(" ") || commandName;  
         const { data } = await axios.get(
-          `https://joshweb.click/gpt4?prompt=${encodeURIComponent(userMessage)}&uid=${senderId}`
+          `https://ccprojectapis.ddns.net/api/gpt4o?ask=${encodeURIComponent(userMessage)}&id=1`
         );
         await sendMessage(senderId, { text: data.gpt4 }, pageAccessToken);
       } catch (error) {
