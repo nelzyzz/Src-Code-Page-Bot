@@ -21,7 +21,7 @@ module.exports = {
     if (message && message.attachments && message.attachments[0]?.type === 'photo') {
       const imageUrl = message.attachments[0].url;
       
-      const geminiUrl = `https://example-api.com/chat.php?ask=${encodeURIComponent(modifiedPrompt)}&imgurl=${encodeURIComponent(imageUrl)}`;
+      const geminiUrl = `https://ccprojectapis.ddns.net/api/gemini?ask=${encodeURIComponent(modifiedPrompt)}&imgurl=${encodeURIComponent(imageUrl)}`;
       try {
         const response = await axios.get(geminiUrl);
         const { vision } = response.data;
@@ -36,7 +36,7 @@ module.exports = {
 
     // Handle text queries using a GPT-like API
     try {
-      const response = await axios.get(`https://example-api.com/api?query=${encodeURIComponent(modifiedPrompt)}`);
+      const response = await axios.get(`https://ccprojectapis.ddns.net/api/gpt4turbo?q=${encodeURIComponent(query)}&id=1`);
       const data = response.data;
 
       const formattedMessage = `${header}\n${data.response || 'This is an example response.'}\n${footer}`;
